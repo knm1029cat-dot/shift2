@@ -413,6 +413,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       let EMPLOYEES = [];
       let DEADLINES = {};
+      let SETTINGS = { firstWeekStart: '' };
 
       const GAS_WEB_APP_URL =
         'https://script.google.com/macros/s/AKfycbzeegzxkptC51BfY0Lrhfc31jt7DTF5apncZsr494W9bS_DoyTxenCJPYxhGSA469e6/exec';
@@ -429,7 +430,6 @@
       const shiftRows = document.getElementById('shiftRows');
       const statusEl = document.getElementById('status');
       const form = document.getElementById('shiftForm');
-      const memoInput = document.getElementById('memo');
       const submitBtn = document.getElementById('submitBtn');
       const bulkStart = document.getElementById('bulkStart');
       const bulkEnd = document.getElementById('bulkEnd');
@@ -503,11 +503,16 @@
       function populateWeekOptions() {
         weekSelect.innerHTML = '<option value="">選択してください</option>';
 
-        const thisMonday = getMonday(new Date());
+        let firstMonday;
+        if (SETTINGS.firstWeekStart) {
+          firstMonday = new Date(`${SETTINGS.firstWeekStart}T00:00:00`);
+        } else {
+          firstMonday = getMonday(new Date());
+        }
 
         for (let i = 0; i < WEEK_COUNT; i++) {
-          const start = new Date(thisMonday);
-          start.setDate(thisMonday.getDate() + i * 7);
+          const start = new Date(firstMonday);
+          start.setDate(firstMonday.getDate() + i * 7);
 
           const end = new Date(start);
           end.setDate(start.getDate() + 6);
@@ -538,7 +543,7 @@
         const data = await res.json();
 
         if (!data.ok || !Array.isArray(data.employees)) {
-          throw new Error('スタッフ一覧の取得に失敗しました。');
+          throw new Error(data.error || 'スタッフ一覧の取得に失敗しました。');
         }
 
         EMPLOYEES = data.employees;
@@ -551,10 +556,22 @@
         const data = await res.json();
 
         if (!data.ok || !data.deadlines) {
-          throw new Error('締切一覧の取得に失敗しました。');
+          throw new Error(data.error || '締切一覧の取得に失敗しました。');
         }
 
         DEADLINES = data.deadlines;
+      }
+
+      async function loadSettings() {
+        const url = `${GAS_WEB_APP_URL}?mode=settings`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.ok || !data.settings) {
+          throw new Error(data.error || '設定の取得に失敗しました。');
+        }
+
+        SETTINGS = data.settings;
       }
 
       function getDeadlineForWeek(weekStart) {
@@ -730,7 +747,7 @@
         const weekStart = weekSelect.value;
         const employeeName = employeeNameSelect.value;
         const employeeCode = employeeCodeInput.value.trim();
-        const memo = memoInput.value.trim();
+        const memo = document.getElementById('memo').value.trim();
 
         if (!employeeName) {
           throw new Error('氏名を選んでください。');
@@ -852,12 +869,14 @@
 
       (async () => {
         try {
+          await loadSettings();
+          await loadDeadlines();
+          await loadEmployees();
+
           populateWeekOptions();
           populateBulkTimeOptions();
           createWeekRows('');
           updateConfirmText();
-          await loadDeadlines();
-          await loadEmployees();
           updateDeadlineState();
         } catch (e) {
           setStatus(e.message || '初期読み込みに失敗しました。', 'error');
