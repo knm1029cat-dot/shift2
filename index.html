@@ -15,6 +15,9 @@
       --danger: #dc2626;
       --ok: #16a34a;
       --info: #1d4ed8;
+      --warn: #b45309;
+      --warn-bg: #fffbeb;
+      --warn-line: #fde68a;
     }
 
     * { box-sizing: border-box; }
@@ -128,25 +131,19 @@
       margin-top: 8px;
     }
 
-    .bulk-box {
-      background: #f8fafc;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .bulk-title {
+    .deadline-box {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--warn-line);
+      background: var(--warn-bg);
+      color: var(--warn);
       font-size: 0.95rem;
-      font-weight: 700;
-      margin-bottom: 10px;
+      display: none;
     }
 
-    .bulk-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 12px;
-      align-items: end;
+    .deadline-box.show {
+      display: block;
     }
 
     .shift-list {
@@ -232,9 +229,9 @@
       color: #fff;
     }
 
-    .secondary {
-      background: #eef2ff;
-      color: #1e3a8a;
+    .primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
     }
 
     .status {
@@ -285,8 +282,7 @@
         font-size: 1.5rem;
       }
 
-      .time-row,
-      .bulk-row {
+      .time-row {
         grid-template-columns: 1fr;
       }
     }
@@ -295,8 +291,8 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>シフト提出</h1>
-      <p class="sub">名前・確認コード・提出週を選んで、出勤時間を入力して送信してください。</p>
+      <h1>シフト希望提出</h1>
+      <p class="sub">名前・社員コード・提出週を選んで、出勤時間を入力して送信してください。</p>
     </div>
 
     <form id="shiftForm">
@@ -310,7 +306,7 @@
           </div>
 
           <div class="field">
-            <label for="employeeCode">確認コード</label>
+            <label for="employeeCode">社員コード</label>
             <input
               id="employeeCode"
               name="employeeCode"
@@ -338,33 +334,13 @@
             <span class="week-text" id="weekRange">週を選ぶとここに表示されます</span>
           </div>
         </div>
+
         <div class="confirm-box" id="confirmText">氏名と週を選ぶと、ここに確認メッセージが表示されます。</div>
+        <div class="deadline-box" id="deadlineBox"></div>
       </div>
 
       <div class="card">
         <h2>出勤希望</h2>
-
-        <div class="bulk-box">
-          <div class="bulk-title">一括入力</div>
-          <div class="bulk-row">
-            <div class="field">
-              <label for="bulkStart">一括出勤時間</label>
-              <select id="bulkStart">
-                <option value="">選択してください</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="bulkEnd">一括退勤時間</label>
-              <select id="bulkEnd">
-                <option value="">選択してください</option>
-              </select>
-            </div>
-
-            <button type="button" class="secondary" id="applyAllBtn">全日へ適用</button>
-          </div>
-        </div>
-
         <div id="shiftRows" class="shift-list"></div>
       </div>
 
@@ -377,7 +353,7 @@
 
       <div class="card">
         <div class="btn-row">
-          <button type="submit" class="primary">送信する</button>
+          <button type="submit" class="primary" id="submitBtn">送信する</button>
         </div>
         <div id="status" class="status"></div>
       </div>
@@ -387,6 +363,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let EMPLOYEES = [];
+      let DEADLINES = {};
 
       const GAS_WEB_APP_URL =
         'https://script.google.com/macros/s/AKfycbzeegzxkptC51BfY0Lrhfc31jt7DTF5apncZsr494W9bS_DoyTxenCJPYxhGSA469e6/exec';
@@ -399,16 +376,15 @@
       const weekSelect = document.getElementById('weekSelect');
       const weekRange = document.getElementById('weekRange');
       const confirmText = document.getElementById('confirmText');
+      const deadlineBox = document.getElementById('deadlineBox');
       const shiftRows = document.getElementById('shiftRows');
       const statusEl = document.getElementById('status');
       const form = document.getElementById('shiftForm');
       const memoInput = document.getElementById('memo');
-      const bulkStart = document.getElementById('bulkStart');
-      const bulkEnd = document.getElementById('bulkEnd');
-      const applyAllBtn = document.getElementById('applyAllBtn');
+      const submitBtn = document.getElementById('submitBtn');
 
-      function buildTimeOptions(includeEmpty = true) {
-        let options = includeEmpty ? '<option value="">休み</option>' : '';
+      function buildTimeOptions() {
+        let options = '<option value="">休み</option>';
 
         for (let hour = 6; hour <= 34; hour++) {
           const hh = String(hour).padStart(2, '0');
@@ -419,16 +395,21 @@
         return options;
       }
 
-      function populateBulkTimeOptions() {
-        bulkStart.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions(false);
-        bulkEnd.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions(false);
-      }
-
       function formatDate(date) {
         const m = date.getMonth() + 1;
         const d = date.getDate();
         const w = JP_DAYS[date.getDay()];
         return `${m}月${d}日（${w}）`;
+      }
+
+      function formatDateTime(date) {
+        const y = date.getFullYear();
+        const m = date.getMonth() + 1;
+        const d = date.getDate();
+        const w = JP_DAYS[date.getDay()];
+        const hh = String(date.getHours()).padStart(2, '0');
+        const mm = String(date.getMinutes()).padStart(2, '0');
+        return `${y}年${m}月${d}日（${w}）${hh}:${mm}`;
       }
 
       function isoDate(date) {
@@ -495,22 +476,74 @@
       }
 
       async function loadEmployees() {
-        try {
-          const url = `${GAS_WEB_APP_URL}?mode=employees`;
-          const res = await fetch(url);
-          const data = await res.json();
+        const url = `${GAS_WEB_APP_URL}?mode=employees`;
+        const res = await fetch(url);
+        const data = await res.json();
 
-          if (!data.ok || !Array.isArray(data.employees)) {
-            throw new Error('スタッフ一覧の取得に失敗しました。');
-          }
-
-          EMPLOYEES = data.employees;
-          populateEmployees();
-        } catch (e) {
-          employeeNameSelect.innerHTML = '<option value="">取得失敗</option>';
-          employeeNameSelect.disabled = true;
-          setStatus('スタッフ一覧を取得できませんでした。', 'error');
+        if (!data.ok || !Array.isArray(data.employees)) {
+          throw new Error('スタッフ一覧の取得に失敗しました。');
         }
+
+        EMPLOYEES = data.employees;
+        populateEmployees();
+      }
+
+      async function loadDeadlines() {
+        const url = `${GAS_WEB_APP_URL}?mode=deadlines`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.ok || !data.deadlines) {
+          throw new Error('締切一覧の取得に失敗しました。');
+        }
+
+        DEADLINES = data.deadlines;
+      }
+
+      function getDeadlineForWeek(weekStart) {
+        const raw = DEADLINES[weekStart];
+        if (!raw) return null;
+
+        const date = new Date(raw);
+        if (isNaN(date)) return null;
+
+        return date;
+      }
+
+      function isDeadlinePassed(weekStart) {
+        const deadline = getDeadlineForWeek(weekStart);
+        if (!deadline) return null;
+
+        return new Date() > deadline;
+      }
+
+      function updateDeadlineState() {
+        const weekStart = weekSelect.value;
+
+        deadlineBox.className = 'deadline-box';
+        deadlineBox.textContent = '';
+        submitBtn.disabled = false;
+
+        if (!weekStart) return;
+
+        const deadline = getDeadlineForWeek(weekStart);
+
+        if (!deadline) {
+          deadlineBox.textContent = 'この週の締切が登録されていません。管理者に確認してください。';
+          deadlineBox.classList.add('show');
+          submitBtn.disabled = true;
+          return;
+        }
+
+        if (new Date() > deadline) {
+          deadlineBox.textContent = `この週の締切は ${formatDateTime(deadline)} で、すでに締切を過ぎています。`;
+          deadlineBox.classList.add('show');
+          submitBtn.disabled = true;
+          return;
+        }
+
+        deadlineBox.textContent = `この週の締切は ${formatDateTime(deadline)} です。`;
+        deadlineBox.classList.add('show');
       }
 
       function updateConfirmText() {
@@ -552,6 +585,7 @@
         if (!weekStartStr) {
           weekRange.textContent = '週を選ぶとここに表示されます';
           updateConfirmText();
+          updateDeadlineState();
           return;
         }
 
@@ -607,32 +641,7 @@
 
         updateRestBadges();
         updateConfirmText();
-      }
-
-      function applyBulkToAllDays() {
-        const startValue = bulkStart.value;
-        const endValue = bulkEnd.value;
-
-        if (!startValue || !endValue) {
-          setStatus('一括出勤時間と一括退勤時間を両方選んでください。', 'error');
-          return;
-        }
-
-        if (!weekSelect.value) {
-          setStatus('先に提出する週を選んでください。', 'error');
-          return;
-        }
-
-        for (let i = 0; i < 7; i++) {
-          const startSelect = document.querySelector(`select[name="start-${i}"]`);
-          const endSelect = document.querySelector(`select[name="end-${i}"]`);
-
-          if (startSelect) startSelect.value = startValue;
-          if (endSelect) endSelect.value = endValue;
-        }
-
-        updateRestBadges();
-        setStatus('全日に一括適用しました。必要な日だけ個別に修正してください。', 'info');
+        updateDeadlineState();
       }
 
       function collectPayload() {
@@ -646,11 +655,19 @@
         }
 
         if (!employeeCode) {
-          throw new Error('確認コードを入力してください。');
+          throw new Error('社員コードを入力してください。');
         }
 
         if (!weekStart) {
           throw new Error('提出する週を選んでください。');
+        }
+
+        const deadlinePassed = isDeadlinePassed(weekStart);
+        if (deadlinePassed === null) {
+          throw new Error('この週の締切が登録されていません。管理者に確認してください。');
+        }
+        if (deadlinePassed) {
+          throw new Error('この週のシフト提出は締切を過ぎています。');
         }
 
         const days = [];
@@ -727,7 +744,6 @@
         form.reset();
         employeeNameSelect.value = selectedName;
         populateWeekOptions();
-        populateBulkTimeOptions();
         createWeekRows('');
       }
 
@@ -749,13 +765,19 @@
 
       employeeNameSelect.addEventListener('change', updateConfirmText);
       weekSelect.addEventListener('change', e => createWeekRows(e.target.value));
-      applyAllBtn.addEventListener('click', applyBulkToAllDays);
 
-      populateWeekOptions();
-      populateBulkTimeOptions();
-      createWeekRows('');
-      updateConfirmText();
-      loadEmployees();
+      (async () => {
+        try {
+          populateWeekOptions();
+          createWeekRows('');
+          updateConfirmText();
+          await loadDeadlines();
+          await loadEmployees();
+          updateDeadlineState();
+        } catch (e) {
+          setStatus(e.message || '初期読み込みに失敗しました。', 'error');
+        }
+      })();
     });
   </script>
 </body>
