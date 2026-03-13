@@ -146,6 +146,27 @@
       display: block;
     }
 
+    .bulk-box {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .bulk-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .bulk-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
     .shift-list {
       display: flex;
       flex-direction: column;
@@ -229,6 +250,11 @@
       color: #fff;
     }
 
+    .secondary {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
     .primary:disabled {
       background: #9ca3af;
       cursor: not-allowed;
@@ -282,7 +308,8 @@
         font-size: 1.5rem;
       }
 
-      .time-row {
+      .time-row,
+      .bulk-row {
         grid-template-columns: 1fr;
       }
     }
@@ -291,7 +318,7 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>シフト希望提出</h1>
+      <h1>シフト提出</h1>
       <p class="sub">名前・社員コード・提出週を選んで、出勤時間を入力して送信してください。</p>
     </div>
 
@@ -313,7 +340,7 @@
               type="password"
               inputmode="numeric"
               maxlength="6"
-              placeholder="6桁コード"
+              placeholder="6桁社員コード"
               required
             />
           </div>
@@ -341,6 +368,28 @@
 
       <div class="card">
         <h2>出勤希望</h2>
+
+        <div class="bulk-box">
+          <div class="bulk-title">一括入力</div>
+          <div class="bulk-row">
+            <div class="field">
+              <label for="bulkStart">一括出勤時間</label>
+              <select id="bulkStart">
+                <option value="">選択してください</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bulkEnd">一括退勤時間</label>
+              <select id="bulkEnd">
+                <option value="">選択してください</option>
+              </select>
+            </div>
+
+            <button type="button" class="secondary" id="applyAllBtn">全日へ適用</button>
+          </div>
+        </div>
+
         <div id="shiftRows" class="shift-list"></div>
       </div>
 
@@ -382,9 +431,12 @@
       const form = document.getElementById('shiftForm');
       const memoInput = document.getElementById('memo');
       const submitBtn = document.getElementById('submitBtn');
+      const bulkStart = document.getElementById('bulkStart');
+      const bulkEnd = document.getElementById('bulkEnd');
+      const applyAllBtn = document.getElementById('applyAllBtn');
 
-      function buildTimeOptions() {
-        let options = '<option value="">休み</option>';
+      function buildTimeOptions(includeEmpty = true) {
+        let options = includeEmpty ? '<option value="">休み</option>' : '';
 
         for (let hour = 6; hour <= 34; hour++) {
           const hh = String(hour).padStart(2, '0');
@@ -393,6 +445,11 @@
         }
 
         return options;
+      }
+
+      function populateBulkTimeOptions() {
+        bulkStart.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions(false);
+        bulkEnd.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions(false);
       }
 
       function formatDate(date) {
@@ -513,7 +570,6 @@
       function isDeadlinePassed(weekStart) {
         const deadline = getDeadlineForWeek(weekStart);
         if (!deadline) return null;
-
         return new Date() > deadline;
       }
 
@@ -644,6 +700,32 @@
         updateDeadlineState();
       }
 
+      function applyBulkToAllDays() {
+        const startValue = bulkStart.value;
+        const endValue = bulkEnd.value;
+
+        if (!startValue || !endValue) {
+          setStatus('一括出勤時間と一括退勤時間を両方選んでください。', 'error');
+          return;
+        }
+
+        if (!weekSelect.value) {
+          setStatus('先に提出する週を選んでください。', 'error');
+          return;
+        }
+
+        for (let i = 0; i < 7; i++) {
+          const startSelect = document.querySelector(`select[name="start-${i}"]`);
+          const endSelect = document.querySelector(`select[name="end-${i}"]`);
+
+          if (startSelect) startSelect.value = startValue;
+          if (endSelect) endSelect.value = endValue;
+        }
+
+        updateRestBadges();
+        setStatus('全日に一括適用しました。必要な日だけ個別に修正してください。', 'info');
+      }
+
       function collectPayload() {
         const weekStart = weekSelect.value;
         const employeeName = employeeNameSelect.value;
@@ -744,6 +826,7 @@
         form.reset();
         employeeNameSelect.value = selectedName;
         populateWeekOptions();
+        populateBulkTimeOptions();
         createWeekRows('');
       }
 
@@ -765,10 +848,12 @@
 
       employeeNameSelect.addEventListener('change', updateConfirmText);
       weekSelect.addEventListener('change', e => createWeekRows(e.target.value));
+      applyAllBtn.addEventListener('click', applyBulkToAllDays);
 
       (async () => {
         try {
           populateWeekOptions();
+          populateBulkTimeOptions();
           createWeekRows('');
           updateConfirmText();
           await loadDeadlines();
