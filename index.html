@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -537,42 +538,21 @@
         employeeNameSelect.disabled = false;
       }
 
-      async function loadEmployees() {
-        const url = `${GAS_WEB_APP_URL}?mode=employees`;
-        const res = await fetch(url);
-        const data = await res.json();
+      async function loadInitialData() {
+  const url = `${GAS_WEB_APP_URL}?mode=init`;
+  const res = await fetch(url);
+  const data = await res.json();
 
-        if (!data.ok || !Array.isArray(data.employees)) {
-          throw new Error(data.error || 'スタッフ一覧の取得に失敗しました。');
-        }
+  if (!data.ok) {
+    throw new Error(data.error || '初期データの取得に失敗しました。');
+  }
 
-        EMPLOYEES = data.employees;
-        populateEmployees();
-      }
+  EMPLOYEES = Array.isArray(data.employees) ? data.employees : [];
+  DEADLINES = data.deadlines || {};
+  SETTINGS = data.settings || { firstWeekStart: '' };
 
-      async function loadDeadlines() {
-        const url = `${GAS_WEB_APP_URL}?mode=deadlines`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (!data.ok || !data.deadlines) {
-          throw new Error(data.error || '締切一覧の取得に失敗しました。');
-        }
-
-        DEADLINES = data.deadlines;
-      }
-
-      async function loadSettings() {
-        const url = `${GAS_WEB_APP_URL}?mode=settings`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (!data.ok || !data.settings) {
-          throw new Error(data.error || '設定の取得に失敗しました。');
-        }
-
-        SETTINGS = data.settings;
-      }
+  populateEmployees();
+}
 
       function getDeadlineForWeek(weekStart) {
         const raw = DEADLINES[weekStart];
@@ -868,21 +848,18 @@
       applyAllBtn.addEventListener('click', applyBulkToAllDays);
 
       (async () => {
-        try {
-          await loadSettings();
-          await loadDeadlines();
-          await loadEmployees();
+  try {
+    await loadInitialData();
 
-          populateWeekOptions();
-          populateBulkTimeOptions();
-          createWeekRows('');
-          updateConfirmText();
-          updateDeadlineState();
-        } catch (e) {
-          setStatus(e.message || '初期読み込みに失敗しました。', 'error');
-        }
-      })();
-    });
+    populateWeekOptions();
+    populateBulkTimeOptions();
+    createWeekRows('');
+    updateConfirmText();
+    updateDeadlineState();
+  } catch (e) {
+    setStatus(e.message || '初期読み込みに失敗しました。', 'error');
+  }
+})();
   </script>
 </body>
 </html>
