@@ -504,12 +504,13 @@
       function populateWeekOptions() {
         weekSelect.innerHTML = '<option value="">選択してください</option>';
 
-        let firstMonday;
-        if (SETTINGS.firstWeekStart) {
-          firstMonday = new Date(`${SETTINGS.firstWeekStart}T00:00:00`);
-        } else {
-          firstMonday = getMonday(new Date());
-        }
+        const weekStarts = Object.keys(DEADLINES).sort();
+
+if (weekStarts.length === 0) {
+  return;
+}
+
+const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
 
         for (let i = 0; i < WEEK_COUNT; i++) {
           const start = new Date(firstMonday);
