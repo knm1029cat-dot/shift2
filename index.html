@@ -866,6 +866,11 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
 })();
     });
   </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js');
+  }
+</script>
 </body>
 
 </html>
