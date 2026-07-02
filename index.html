@@ -704,6 +704,28 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
 if (startSelect) startSelect.addEventListener('change', updateRestBadges);
 if (endSelect) endSelect.addEventListener('change', updateRestBadges);
 
+  const restButton = document.querySelector(`[data-rest-toggle="${i}"]`);
+
+if (restButton) {
+  restButton.addEventListener('click', () => {
+    if (restButton.textContent === '休み') {
+      // 休みに変更
+      startSelect.value = '';
+      endSelect.value = '';
+      startSelect.disabled = true;
+      endSelect.disabled = true;
+      restButton.textContent = '出勤';
+    } else {
+      // 出勤に変更
+      startSelect.disabled = false;
+      endSelect.disabled = false;
+      restButton.textContent = '休み';
+    }
+
+    updateRestBadges();
+  });
+}
+
 if (workSelect) {
   workSelect.addEventListener('change', () => {
     if (workSelect.value === 'rest') {
