@@ -637,69 +637,88 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
       }
 
       function createWeekRows(weekStartStr) {
-        shiftRows.innerHTML = '';
+  shiftRows.innerHTML = '';
 
-        if (!weekStartStr) {
-          weekRange.textContent = '週を選ぶとここに表示されます';
-          updateConfirmText();
-          updateDeadlineState();
-          return;
-        }
+  if (!weekStartStr) {
+    weekRange.textContent = '週を選ぶとここに表示されます';
+    updateConfirmText();
+    updateDeadlineState();
+    return;
+  }
 
-        const start = new Date(`${weekStartStr}T00:00:00`);
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
+  const start = new Date(`${weekStartStr}T00:00:00`);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
 
-        weekRange.textContent = `${formatDate(start)} 〜 ${formatDate(end)}`;
+  weekRange.textContent = `${formatDate(start)} 〜 ${formatDate(end)}`;
 
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(start);
-          date.setDate(start.getDate() + i);
-          const dateKey = isoDate(date);
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    const dateKey = isoDate(date);
 
-          const item = document.createElement('div');
-          item.className = 'shift-item';
-          item.innerHTML = `
-            <div class="shift-item-head">
-              <div>
-                <div class="shift-date">${formatDate(date)}</div>
-                <div class="shift-date-sub">${dateKey}</div>
-              </div>
-              <span class="rest-badge" data-rest-badge="${i}">休み</span>
-            </div>
+    const item = document.createElement('div');
+    item.className = 'shift-item';
+    item.innerHTML = `
+      <div class="shift-item-head">
+        <div>
+          <div class="shift-date">${formatDate(date)}</div>
+          <div class="shift-date-sub">${dateKey}</div>
+        </div>
 
-            <div class="time-row">
-              <div>
-                <label class="time-label">出勤時間</label>
-                <select class="time-input" name="start-${i}">
-                  ${buildTimeOptions()}
-                </select>
-              </div>
+        <select class="rest-badge" data-rest-select="${i}">
+          <option value="work">出勤</option>
+          <option value="rest" selected>休み</option>
+        </select>
+      </div>
 
-              <div>
-                <label class="time-label">退勤時間</label>
-                <select class="time-input" name="end-${i}">
-                  ${buildTimeOptions()}
-                </select>
-              </div>
-            </div>
-          `;
+      <div class="time-row">
+        <div>
+          <label class="time-label">出勤時間</label>
+          <select class="time-input" name="start-${i}">
+            ${buildTimeOptions()}
+          </select>
+        </div>
 
-          shiftRows.appendChild(item);
-        }
+        <div>
+          <label class="time-label">退勤時間</label>
+          <select class="time-input" name="end-${i}">
+            ${buildTimeOptions()}
+          </select>
+        </div>
+      </div>
+    `;
 
-        for (let i = 0; i < 7; i++) {
-          const startSelect = document.querySelector(`select[name="start-${i}"]`);
-          const endSelect = document.querySelector(`select[name="end-${i}"]`);
+    shiftRows.appendChild(item);
+  }
 
-          if (startSelect) startSelect.addEventListener('change', updateRestBadges);
-          if (endSelect) endSelect.addEventListener('change', updateRestBadges);
-        }
+  for (let i = 0; i < 7; i++) {
+    const startSelect = document.querySelector(`select[name="start-${i}"]`);
+    const endSelect = document.querySelector(`select[name="end-${i}"]`);
+    const restSelect = document.querySelector(`[data-rest-select="${i}"]`);
 
-        updateRestBadges();
-        updateConfirmText();
-        updateDeadlineState();
+    function syncRestSelect() {
+      if (!startSelect.value && !endSelect.value) {
+        restSelect.value = 'rest';
+      } else {
+        restSelect.value = 'work';
       }
+    }
+
+    startSelect.addEventListener('change', syncRestSelect);
+    endSelect.addEventListener('change', syncRestSelect);
+
+    restSelect.addEventListener('change', () => {
+      if (restSelect.value === 'rest') {
+        startSelect.value = '';
+        endSelect.value = '';
+      }
+    });
+  }
+
+  updateConfirmText();
+  updateDeadlineState();
+}
 
       function applyBulkToAllDays() {
         const startValue = bulkStart.value;
