@@ -742,13 +742,7 @@ if (workSelect) {
           return;
         }
 
-        for (let i = 0; i < 7; i++) {
-          const startSelect = document.querySelector(`select[name="start-${i}"]`);
-          const endSelect = document.querySelector(`select[name="end-${i}"]`);
-
-          if (startSelect) startSelect.value = startValue;
-          if (endSelect) endSelect.value = endValue;
-        }
+        for (let i = 0; i < 
 
         updateRestBadges();
         setStatus('全日に一括適用しました。必要な日だけ個別に修正してください。', 'info');
