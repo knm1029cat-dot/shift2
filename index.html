@@ -666,10 +666,10 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
           <div class="shift-date-sub">${dateKey}</div>
         </div>
 
-        <select class="rest-badge" data-rest-select="${i}">
-          <option value="work">出勤</option>
-          <option value="rest" selected>休み</option>
-        </select>
+        <div class="btn-row">
+          <span class="rest-badge" data-rest-badge="${i}">休み</span>
+          <button type="button" class="secondary" data-rest-btn="${i}">休み</button>
+        </div>
       </div>
 
       <div class="time-row">
@@ -695,31 +695,24 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
   for (let i = 0; i < 7; i++) {
     const startSelect = document.querySelector(`select[name="start-${i}"]`);
     const endSelect = document.querySelector(`select[name="end-${i}"]`);
-    const restSelect = document.querySelector(`[data-rest-select="${i}"]`);
+    const restBtn = document.querySelector(`[data-rest-btn="${i}"]`);
 
-    function syncRestSelect() {
-      if (!startSelect.value && !endSelect.value) {
-        restSelect.value = 'rest';
-      } else {
-        restSelect.value = 'work';
-      }
-    }
+    if (startSelect) startSelect.addEventListener('change', updateRestBadges);
+    if (endSelect) endSelect.addEventListener('change', updateRestBadges);
 
-    startSelect.addEventListener('change', syncRestSelect);
-    endSelect.addEventListener('change', syncRestSelect);
-
-    restSelect.addEventListener('change', () => {
-      if (restSelect.value === 'rest') {
+    if (restBtn) {
+      restBtn.addEventListener('click', () => {
         startSelect.value = '';
         endSelect.value = '';
-      }
-    });
+        updateRestBadges();
+      });
+    }
   }
 
+  updateRestBadges();
   updateConfirmText();
   updateDeadlineState();
-}
-
+}  
       function applyBulkToAllDays() {
         const startValue = bulkStart.value;
         const endValue = bulkEnd.value;
