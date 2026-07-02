@@ -621,21 +621,20 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
       }
 
       function updateRestBadges() {
-        for (let i = 0; i < 7; i++) {
-          const start = document.querySelector(`select[name="start-${i}"]`);
-          const end = document.querySelector(`select[name="end-${i}"]`);
-          const badge = document.querySelector(`[data-rest-badge="${i}"]`);
+  for (let i = 0; i < 7; i++) {
+    const start = document.querySelector(`select[name="start-${i}"]`);
+    const end = document.querySelector(`select[name="end-${i}"]`);
+    const badge = document.querySelector(`[data-work-select="${i}"]`);
 
-          if (!badge || !start || !end) continue;
+    if (!badge || !start || !end) continue;
 
-          if (!start.value && !end.value) {
-            badge.textContent = '休み';
-          } else {
-            badge.textContent = '出勤';
-          }
-        }
-      }
-
+    if (!start.value && !end.value) {
+      badge.value = 'rest';
+    } else {
+      badge.value = 'work';
+    }
+  }
+}
       function createWeekRows(weekStartStr) {
   shiftRows.innerHTML = '';
 
@@ -667,7 +666,10 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
         </div>
 
         <div class="btn-row">
-          <span class="rest-badge" data-rest-badge="${i}">休み</span>
+         <select class="rest-badge" data-work-select="${i}">
+  <option value="work" selected>出勤</option>
+  <option value="rest">休み</option>
+</select>
           <button type="button" class="secondary" data-rest-btn="${i}">休み</button>
         </div>
       </div>
@@ -697,8 +699,21 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
     const endSelect = document.querySelector(`select[name="end-${i}"]`);
     const restBtn = document.querySelector(`[data-rest-btn="${i}"]`);
 
-    if (startSelect) startSelect.addEventListener('change', updateRestBadges);
-    if (endSelect) endSelect.addEventListener('change', updateRestBadges);
+    const workSelect = document.querySelector(`[data-work-select="${i}"]`);
+
+if (startSelect) startSelect.addEventListener('change', updateRestBadges);
+if (endSelect) endSelect.addEventListener('change', updateRestBadges);
+
+if (workSelect) {
+  workSelect.addEventListener('change', () => {
+    if (workSelect.value === 'rest') {
+      startSelect.value = '';
+      endSelect.value = '';
+    }
+
+    updateRestBadges();
+  });
+}
 
     if (restBtn) {
       restBtn.addEventListener('click', () => {
