@@ -620,21 +620,6 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
           `${name} さんとして ${formatDate(start)} 〜 ${formatDate(end)} のシフトを提出します。`;
       }
 
-      function updateRestBadges() {
-  for (let i = 0; i < 7; i++) {
-    const start = document.querySelector(`select[name="start-${i}"]`);
-    const end = document.querySelector(`select[name="end-${i}"]`);
-    const badge = document.querySelector(`[data-work-select="${i}"]`);
-
-    if (!badge || !start || !end) continue;
-
-    if (!start.value && !end.value) {
-      badge.value = 'rest';
-    } else {
-      badge.value = 'work';
-    }
-  }
-}
       function createWeekRows(weekStartStr) {
   shiftRows.innerHTML = '';
 
@@ -730,7 +715,7 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
       setWorkState(isCurrentlyRest);
     });
 
-    setWorkState(false);
+    setWorkState(true);
   }
 
   updateConfirmText();
@@ -765,6 +750,59 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
   }
 
   setStatus('全日に一括適用しました。休みの日だけ「休みにする」を押してください。', 'info');
+}
+
+function collectPayload() {
+  const weekStart = weekSelect.value;
+  const employeeName = employeeNameSelect.value;
+  const employeeCode = employeeCodeInput.value.trim();
+  const memo = document.getElementById('memo').value.trim();
+
+  if (!employeeName) throw new Error('氏名を選んでください。');
+  if (!employeeCode) throw new Error('社員コードを入力してください。');
+  if (!weekStart) throw new Error('提出する週を選んでください。');
+
+  const deadlinePassed = isDeadlinePassed(weekStart);
+  if (deadlinePassed === null) {
+    throw new Error('この週の締切が登録されていません。管理者に確認してください。');
+  }
+  if (deadlinePassed) {
+    throw new Error('この週のシフト提出は締切を過ぎています。');
+  }
+
+  const days = [];
+  const start = new Date(`${weekStart}T00:00:00`);
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+
+    const startValue = document.querySelector(`select[name="start-${i}"]`).value;
+    const endValue = document.querySelector(`select[name="end-${i}"]`).value;
+
+    if ((startValue && !endValue) || (!startValue && endValue)) {
+      throw new Error(`${formatDate(date)} は出勤時間と退勤時間をセットで入れてください。`);
+    }
+
+    days.push({
+      index: i,
+      date: isoDate(date),
+      label: formatDate(date),
+      available: startValue && endValue ? '○' : '×',
+      start: startValue,
+      end: endValue
+    });
+  }
+
+  return {
+    submittedAt: new Date().toISOString(),
+    employeeName,
+    employeeCode,
+    weekStart,
+    weekEnd: days[6].date,
+    memo,
+    days
+  };
 }
 
       function setStatus(message, type = '') {
