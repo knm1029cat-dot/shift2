@@ -708,18 +708,18 @@ if (endSelect) endSelect.addEventListener('change', updateRestBadges);
 
 if (restButton) {
   restButton.addEventListener('click', () => {
-    if (restButton.textContent === '休み') {
+    if (restButton.textContent === '休みにする') {
       // 休みに変更
       startSelect.value = '';
       endSelect.value = '';
       startSelect.disabled = true;
       endSelect.disabled = true;
-      restButton.textContent = '出勤';
+      restButton.textContent = '出勤にする';
     } else {
       // 出勤に変更
       startSelect.disabled = false;
       endSelect.disabled = false;
-      restButton.textContent = '休み';
+      restButton.textContent = '休みにする';
     }
 
     updateRestBadges();
