@@ -439,10 +439,10 @@
       const bulkEnd = document.getElementById('bulkEnd');
       const applyAllBtn = document.getElementById('applyAllBtn');
 
-      function buildTimeOptions(includeEmpty = true) {
-        let options = includeEmpty ? '<option value="">休み</option>' : '';
+     function buildTimeOptions() {
+    let options = '<option value="">選択してください</option>';
 
-        for (let hour = 6; hour <= 34; hour++) {
+    for (let hour = 6; hour <= 34; hour++) {
           const hh = String(hour).padStart(2, '0');
           const value = `${hh}:00`;
           options += `<option value="${value}">${value}</option>`;
@@ -452,8 +452,8 @@
       }
 
       function populateBulkTimeOptions() {
-        bulkStart.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions(false);
-        bulkEnd.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions(false);
+        bulkStart.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions();
+        bulkEnd.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions();
       }
 
       function formatDate(date) {
