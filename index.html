@@ -452,9 +452,9 @@
       }
 
       function populateBulkTimeOptions() {
-        bulkStart.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions();
-        bulkEnd.innerHTML = '<option value="">選択してください</option>' + buildTimeOptions();
-      }
+  bulkStart.innerHTML = buildTimeOptions();
+  bulkEnd.innerHTML = buildTimeOptions();
+}
 
       function formatDate(date) {
         const m = date.getMonth() + 1;
