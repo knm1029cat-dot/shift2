@@ -651,22 +651,22 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
         </div>
 
         <div class="btn-row">
-          <span class="rest-badge" data-rest-badge="${i}">休み</span>
-          <button type="button" class="secondary" data-rest-btn="${i}">出勤にする</button>
+          <button type="button" class="primary" data-work-btn="${i}">出勤</button>
+          <button type="button" class="secondary" data-absent-btn="${i}">欠勤</button>
         </div>
       </div>
 
       <div class="time-row">
         <div>
           <label class="time-label">出勤時間</label>
-          <select class="time-input" name="start-${i}" disabled>
+          <select class="time-input" name="start-${i}">
             ${buildTimeOptions()}
           </select>
         </div>
 
         <div>
           <label class="time-label">退勤時間</label>
-          <select class="time-input" name="end-${i}" disabled>
+          <select class="time-input" name="end-${i}">
             ${buildTimeOptions()}
           </select>
         </div>
@@ -679,48 +679,52 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
   for (let i = 0; i < 7; i++) {
     const startSelect = document.querySelector(`select[name="start-${i}"]`);
     const endSelect = document.querySelector(`select[name="end-${i}"]`);
-    const badge = document.querySelector(`[data-rest-badge="${i}"]`);
-    const restBtn = document.querySelector(`[data-rest-btn="${i}"]`);
+    const workBtn = document.querySelector(`[data-work-btn="${i}"]`);
+    const absentBtn = document.querySelector(`[data-absent-btn="${i}"]`);
 
-    function setWorkState(isWork) {
+    function setDayState(isWork) {
       if (isWork) {
         startSelect.disabled = false;
         endSelect.disabled = false;
-        badge.textContent = '出勤';
-        restBtn.textContent = '休みにする';
+        workBtn.className = 'primary';
+        absentBtn.className = 'secondary';
       } else {
         startSelect.value = '';
         endSelect.value = '';
         startSelect.disabled = true;
         endSelect.disabled = true;
-        badge.textContent = '休み';
-        restBtn.textContent = '出勤にする';
+        workBtn.className = 'secondary';
+        absentBtn.className = 'primary';
       }
     }
 
+    workBtn.addEventListener('click', () => {
+      setDayState(true);
+    });
+
+    absentBtn.addEventListener('click', () => {
+      setDayState(false);
+    });
+
     startSelect.addEventListener('change', () => {
       if (startSelect.value || endSelect.value) {
-        setWorkState(true);
+        setDayState(true);
       }
     });
 
     endSelect.addEventListener('change', () => {
       if (startSelect.value || endSelect.value) {
-        setWorkState(true);
+        setDayState(true);
       }
     });
 
-    restBtn.addEventListener('click', () => {
-      const isCurrentlyRest = badge.textContent === '休み';
-      setWorkState(isCurrentlyRest);
-    });
-
-    setWorkState(true);
+    setDayState(true);
   }
 
   updateConfirmText();
   updateDeadlineState();
 }
+
       function applyBulkToAllDays() {
   const startValue = bulkStart.value;
   const endValue = bulkEnd.value;
@@ -738,18 +742,18 @@ const firstMonday = new Date(`${weekStarts[0]}T00:00:00`);
   for (let i = 0; i < 7; i++) {
     const startSelect = document.querySelector(`select[name="start-${i}"]`);
     const endSelect = document.querySelector(`select[name="end-${i}"]`);
-    const badge = document.querySelector(`[data-rest-badge="${i}"]`);
-    const restBtn = document.querySelector(`[data-rest-btn="${i}"]`);
+    const workBtn = document.querySelector(`[data-work-btn="${i}"]`);
+    const absentBtn = document.querySelector(`[data-absent-btn="${i}"]`);
 
     startSelect.disabled = false;
     endSelect.disabled = false;
     startSelect.value = startValue;
     endSelect.value = endValue;
-    badge.textContent = '出勤';
-    restBtn.textContent = '休みにする';
+    workBtn.className = 'primary';
+    absentBtn.className = 'secondary';
   }
 
-  setStatus('全日に一括適用しました。休みの日だけ「休みにする」を押してください。', 'info');
+  setStatus('全日に一括適用しました。欠勤の日だけ「欠勤」を押してください。', 'info');
 }
 
 function collectPayload() {
