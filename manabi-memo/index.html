@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="icon-512.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>まなびメモ - 勉強・仕事のノート</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --accent: #2563eb;
+      --accent-dark: #1e40af;
+      --accent-soft: #e8f0fe;
+      --teal: #0d9488;
+      --teal-soft: #e6fbf8;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --ok: #16a34a;
+      --ok-soft: #f0fdf4;
+      --pin: #d97706;
+      --pin-soft: #fffbeb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 16px 16px 60px;
+    }
+
+    header.card {
+      background: linear-gradient(135deg, #2563eb, #0d9488);
+      color: #fff;
+      border: none;
+    }
+
+    header.card h1 { margin: 0 0 6px; font-size: 1.6rem; }
+    header.card p { margin: 0; opacity: 0.92; font-size: 0.92rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(30, 64, 175, 0.06);
+      margin-bottom: 14px;
+    }
+
+    h2 { margin: 0 0 4px; font-size: 1.15rem; }
+
+    .section-desc {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .privacy-note {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      margin-top: 10px;
+    }
+
+    nav.app-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    nav.app-nav button {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    nav.app-nav button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    section.tab { display: none; }
+    section.tab.active { display: block; }
+
+    label {
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    input, select, textarea, button { font: inherit; }
+
+    input[type="text"],
+    input[type="search"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea { min-height: 140px; resize: vertical; }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 620px) {
+      .row2 { grid-template-columns: 1fr; }
+    }
+
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 0.86rem;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .tag-chip.selected {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    .custom-tag-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .custom-tag-row input { flex: 1; }
+
+    .pin-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      user-select: none;
+    }
+
+    .pin-toggle input { width: 18px; height: 18px; }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary { background: var(--accent); color: #fff; }
+    .secondary { background: var(--accent-soft); color: var(--accent-dark); }
+    .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+    .danger-btn { background: var(--danger-soft); color: var(--danger); }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .status {
+      margin-top: 12px;
+      font-weight: 600;
+      padding: 11px 14px;
+      border-radius: 12px;
+      display: none;
+      font-size: 0.9rem;
+    }
+
+    .status.show { display: block; }
+
+    .status.error { color: var(--danger); background: var(--danger-soft); border: 1px solid #fecaca; }
+    .status.success { color: var(--ok); background: var(--ok-soft); border: 1px solid #bbf7d0; }
+    .status.info { color: var(--accent-dark); background: var(--accent-soft); border: 1px solid #c7d9fb; }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .filter-row input[type="search"] { flex: 1; min-width: 160px; }
+    .filter-row select { width: auto; }
+
+    .note-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+    .note-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fcfcfd;
+    }
+
+    .note-item.pinned { border-color: var(--pin); background: var(--pin-soft); }
+
+    .note-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .note-title { font-weight: 800; font-size: 1rem; }
+    .note-title .pin-star { color: var(--pin); margin-right: 4px; }
+
+    .note-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .note-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    .badge.tag { background: var(--teal-soft); color: #0f5f56; }
+
+    .note-body {
+      font-size: 0.9rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      margin-top: 8px;
+    }
+
+    .note-body.collapsed {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .note-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .note-actions button {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+
+    .empty-note {
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .import-export-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 620px) {
+      .stat-grid { grid-template-columns: repeat(1, 1fr); }
+    }
+
+    .stat-box {
+      background: var(--accent-soft);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-box .num { font-size: 1.3rem; font-weight: 800; color: var(--accent-dark); }
+    .stat-box .lbl { font-size: 0.75rem; color: var(--muted); }
+
+    footer.disclaimer {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 18px 10px 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="card">
+      <h1>まなびメモ</h1>
+      <p>勉強や仕事のメモを、カテゴリとタグでさっと整理・検索できるノートアプリです。</p>
+      <div class="privacy-note">🔒 <span>記録はすべてこの端末内（ブラウザ）にのみ保存され、どこにも送信されません。</span></div>
+    </header>
+
+    <nav class="app-nav" id="appNav">
+      <button type="button" data-tab="editor" class="active">✏️ メモ作成</button>
+      <button type="button" data-tab="list">📚 一覧・検索</button>
+      <button type="button" data-tab="settings">⚙ 設定</button>
+    </nav>
+
+    <!-- メモ作成 -->
+    <section class="tab active" data-tab="editor">
+      <div class="card">
+        <h2 id="editorHeading">新しいメモを作成</h2>
+        <p class="section-desc">授業・会議・タスクなど、勉強や仕事の内容をカテゴリとタグを付けて記録します。</p>
+
+        <form id="noteForm">
+          <input type="hidden" id="noteId" />
+
+          <div class="row2">
+            <div class="field">
+              <label for="noteTitle">タイトル</label>
+              <input type="text" id="noteTitle" placeholder="例: 英語 第3課の要点" required />
+            </div>
+            <div class="field">
+              <label for="noteCategory">カテゴリ</label>
+              <select id="noteCategory"></select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>タグ（複数選択可）</label>
+            <div class="tag-chips" id="noteTagChips"></div>
+            <div class="custom-tag-row">
+              <input type="text" id="noteCustomTag" placeholder="新しいタグを追加" />
+              <button type="button" class="secondary" id="noteAddTagBtn">追加</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="noteBody">内容</label>
+            <textarea id="noteBody" placeholder="学んだこと、決まったこと、次にやることなど自由に書いてください" required></textarea>
+          </div>
+
+          <div class="field">
+            <label class="pin-toggle"><input type="checkbox" id="notePinned" /> 📌 ピン留めして一覧の上に固定する</label>
+          </div>
+
+          <div class="btn-row">
+            <button type="submit" class="primary" id="noteSubmitBtn">メモを保存</button>
+            <button type="button" class="ghost" id="noteCancelEditBtn" style="display:none;">編集をキャンセル</button>
+          </div>
+          <div id="noteStatus" class="status"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 一覧・検索 -->
+    <section class="tab" data-tab="list">
+      <div class="card">
+        <h2>メモの一覧</h2>
+        <p class="section-desc">キーワード・カテゴリ・タグで絞り込めます。ピン留めしたメモは常に上に表示されます。</p>
+
+        <div class="stat-grid" id="listStats"></div>
+
+        <div class="filter-row">
+          <input type="search" id="listSearch" placeholder="タイトル・本文で検索" />
+        </div>
+        <div class="filter-row">
+          <select id="listCategoryFilter">
+            <option value="all">すべてのカテゴリ</option>
+          </select>
+          <select id="listTagFilter">
+            <option value="all">すべてのタグ</option>
+          </select>
+          <button type="button" class="ghost" id="listFilterClearBtn">条件をクリア</button>
+        </div>
+
+        <div id="noteList" class="note-list"></div>
+      </div>
+    </section>
+
+    <!-- 設定 -->
+    <section class="tab" data-tab="settings">
+      <div class="card">
+        <h2>データのバックアップ</h2>
+        <p class="section-desc">記録は端末内のブラウザにのみ保存されています。機種変更やブラウザの変更に備えて、定期的にエクスポートしておくことをおすすめします。</p>
+
+        <div class="import-export-row">
+          <button type="button" class="primary" id="exportDataBtn">データをエクスポート（JSON）</button>
+          <label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer;">
+            データをインポート
+            <input type="file" id="importDataInput" accept="application/json" style="display:none;" />
+          </label>
+          <button type="button" class="danger-btn" id="clearDataBtn">すべてのデータを削除</button>
+        </div>
+        <div id="settingsStatus" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>カテゴリの管理</h2>
+        <p class="section-desc">メモ作成時に選べるカテゴリを追加できます。</p>
+        <div class="custom-tag-row">
+          <input type="text" id="newCategoryInput" placeholder="新しいカテゴリ名" />
+          <button type="button" class="secondary" id="addCategoryBtn">追加</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>このアプリについて</h2>
+        <p class="section-desc">
+          まなびメモは、勉強や仕事の中で気づいたこと・決まったこと・やるべきことを、その場ですぐに書き留めておくための個人用ノートツールです。カテゴリとタグで後から見返しやすく整理できます。
+        </p>
+      </div>
+    </section>
+
+    <footer class="disclaimer">まなびメモ &mdash; 端末内保存のシンプルなノートアプリ</footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const STORAGE_KEY = 'manabiMemoData_v1';
+      const DEFAULT_CATEGORIES = ['授業', '仕事', '会議', 'タスク', 'アイデア', 'その他'];
+      const DEFAULT_TAGS = ['重要', '復習', '締切あり', '要確認', 'アイデア'];
+
+      let data = loadData();
+      let selectedNoteTags = new Set();
+      let editingId = null;
+
+      // ---------- storage ----------
+      function loadData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return { notes: [], categories: [...DEFAULT_CATEGORIES], tags: [...DEFAULT_TAGS] };
+          const parsed = JSON.parse(raw);
+          return {
+            notes: Array.isArray(parsed.notes) ? parsed.notes : [],
+            categories: Array.isArray(parsed.categories) && parsed.categories.length ? parsed.categories : [...DEFAULT_CATEGORIES],
+            tags: Array.isArray(parsed.tags) ? parsed.tags : [...DEFAULT_TAGS]
+          };
+        } catch (e) {
+          return { notes: [], categories: [...DEFAULT_CATEGORIES], tags: [...DEFAULT_TAGS] };
+        }
+      }
+
+      function saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      function makeId() {
+        return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      }
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+
+      function nowIso() {
+        const d = new Date();
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      const JP_DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
+      function formatDatetimeLabel(datetimeStr) {
+        const d = new Date(datetimeStr);
+        if (isNaN(d)) return datetimeStr;
+        return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${JP_DAYS[d.getDay()]}） ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+
+      function setStatus(el, message, type) {
+        if (!message) {
+          el.textContent = '';
+          el.className = 'status';
+          return;
+        }
+        el.textContent = message;
+        el.className = `status show ${type || ''}`;
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      // ---------- tab switching ----------
+      const navButtons = document.querySelectorAll('#appNav button');
+      const tabSections = document.querySelectorAll('section.tab');
+
+      navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          navButtons.forEach(b => b.classList.remove('active'));
+          tabSections.forEach(s => s.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelector(`section.tab[data-tab="${btn.dataset.tab}"]`).classList.add('active');
+
+          if (btn.dataset.tab === 'list') renderNoteList();
+        });
+      });
+
+      function switchTab(tabName) {
+        navButtons.forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+        tabSections.forEach(s => s.classList.toggle('active', s.dataset.tab === tabName));
+        if (tabName === 'list') renderNoteList();
+      }
+
+      // ---------- editor ----------
+      const noteForm = document.getElementById('noteForm');
+      const noteIdInput = document.getElementById('noteId');
+      const noteTitle = document.getElementById('noteTitle');
+      const noteCategory = document.getElementById('noteCategory');
+      const noteTagChips = document.getElementById('noteTagChips');
+      const noteCustomTag = document.getElementById('noteCustomTag');
+      const noteAddTagBtn = document.getElementById('noteAddTagBtn');
+      const noteBody = document.getElementById('noteBody');
+      const notePinned = document.getElementById('notePinned');
+      const noteStatus = document.getElementById('noteStatus');
+      const editorHeading = document.getElementById('editorHeading');
+      const noteSubmitBtn = document.getElementById('noteSubmitBtn');
+      const noteCancelEditBtn = document.getElementById('noteCancelEditBtn');
+
+      function populateCategorySelect(selectEl, includeAllOption) {
+        const current = selectEl.value;
+        selectEl.innerHTML = '';
+        if (includeAllOption) {
+          const allOpt = document.createElement('option');
+          allOpt.value = 'all';
+          allOpt.textContent = 'すべてのカテゴリ';
+          selectEl.appendChild(allOpt);
+        }
+        data.categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat;
+          opt.textContent = cat;
+          selectEl.appendChild(opt);
+        });
+        if (current && [...selectEl.options].some(o => o.value === current)) selectEl.value = current;
+      }
+
+      function renderTagChips(container, allTags, selectedSet) {
+        container.innerHTML = '';
+        allTags.forEach(tag => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'tag-chip' + (selectedSet.has(tag) ? ' selected' : '');
+          chip.textContent = tag;
+          chip.addEventListener('click', () => {
+            if (selectedSet.has(tag)) selectedSet.delete(tag);
+            else selectedSet.add(tag);
+            chip.classList.toggle('selected');
+          });
+          container.appendChild(chip);
+        });
+      }
+
+      noteAddTagBtn.addEventListener('click', () => {
+        const val = noteCustomTag.value.trim();
+        if (!val) return;
+        if (!data.tags.includes(val)) {
+          data.tags.push(val);
+          saveData();
+        }
+        selectedNoteTags.add(val);
+        noteCustomTag.value = '';
+        renderTagChips(noteTagChips, data.tags, selectedNoteTags);
+        populateTagFilterSelect();
+      });
+
+      function resetNoteForm() {
+        editingId = null;
+        noteIdInput.value = '';
+        noteTitle.value = '';
+        populateCategorySelect(noteCategory, false);
+        selectedNoteTags = new Set();
+        renderTagChips(noteTagChips, data.tags, selectedNoteTags);
+        noteBody.value = '';
+        notePinned.checked = false;
+        editorHeading.textContent = '新しいメモを作成';
+        noteSubmitBtn.textContent = 'メモを保存';
+        noteCancelEditBtn.style.display = 'none';
+      }
+
+      noteCancelEditBtn.addEventListener('click', () => {
+        resetNoteForm();
+        setStatus(noteStatus, '', '');
+      });
+
+      noteForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const title = noteTitle.value.trim();
+        const body = noteBody.value.trim();
+
+        if (!title || !body) {
+          setStatus(noteStatus, 'タイトルと内容を入力してください。', 'error');
+          return;
+        }
+
+        if (editingId) {
+          const existing = data.notes.find(n => n.id === editingId);
+          if (existing) {
+            existing.title = title;
+            existing.category = noteCategory.value;
+            existing.tags = Array.from(selectedNoteTags);
+            existing.body = body;
+            existing.pinned = notePinned.checked;
+            existing.updatedAt = nowIso();
+          }
+          setStatus(noteStatus, 'メモを更新しました。', 'success');
+        } else {
+          const note = {
+            id: makeId(),
+            title,
+            category: noteCategory.value,
+            tags: Array.from(selectedNoteTags),
+            body,
+            pinned: notePinned.checked,
+            createdAt: nowIso(),
+            updatedAt: nowIso()
+          };
+          data.notes.push(note);
+          setStatus(noteStatus, 'メモを保存しました。', 'success');
+        }
+
+        saveData();
+        resetNoteForm();
+        renderNoteList();
+      });
+
+      function startEditNote(id) {
+        const note = data.notes.find(n => n.id === id);
+        if (!note) return;
+        editingId = id;
+        noteIdInput.value = id;
+        noteTitle.value = note.title;
+        populateCategorySelect(noteCategory, false);
+        noteCategory.value = note.category;
+        selectedNoteTags = new Set(note.tags);
+        renderTagChips(noteTagChips, data.tags, selectedNoteTags);
+        noteBody.value = note.body;
+        notePinned.checked = !!note.pinned;
+        editorHeading.textContent = 'メモを編集';
+        noteSubmitBtn.textContent = '更新を保存';
+        noteCancelEditBtn.style.display = 'inline-block';
+        switchTab('editor');
+        setStatus(noteStatus, '', '');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // ---------- list ----------
+      const listStats = document.getElementById('listStats');
+      const listSearch = document.getElementById('listSearch');
+      const listCategoryFilter = document.getElementById('listCategoryFilter');
+      const listTagFilter = document.getElementById('listTagFilter');
+      const listFilterClearBtn = document.getElementById('listFilterClearBtn');
+      const noteList = document.getElementById('noteList');
+
+      function populateTagFilterSelect() {
+        const current = listTagFilter.value;
+        listTagFilter.innerHTML = '';
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.textContent = 'すべてのタグ';
+        listTagFilter.appendChild(allOpt);
+        data.tags.forEach(tag => {
+          const opt = document.createElement('option');
+          opt.value = tag;
+          opt.textContent = tag;
+          listTagFilter.appendChild(opt);
+        });
+        if (current && [...listTagFilter.options].some(o => o.value === current)) listTagFilter.value = current;
+      }
+
+      function renderNoteList() {
+        const keyword = listSearch.value.trim().toLowerCase();
+        const categoryVal = listCategoryFilter.value;
+        const tagVal = listTagFilter.value;
+
+        let items = [...data.notes];
+
+        if (keyword) {
+          items = items.filter(n =>
+            n.title.toLowerCase().includes(keyword) || n.body.toLowerCase().includes(keyword)
+          );
+        }
+        if (categoryVal !== 'all') items = items.filter(n => n.category === categoryVal);
+        if (tagVal !== 'all') items = items.filter(n => n.tags.includes(tagVal));
+
+        items.sort((a, b) => {
+          if (!!b.pinned !== !!a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+          return b.updatedAt.localeCompare(a.updatedAt);
+        });
+
+        listStats.innerHTML = `
+          <div class="stat-box"><div class="num">${data.notes.length}</div><div class="lbl">総メモ数</div></div>
+          <div class="stat-box"><div class="num">${data.notes.filter(n => n.pinned).length}</div><div class="lbl">ピン留め</div></div>
+          <div class="stat-box"><div class="num">${items.length}</div><div class="lbl">表示中</div></div>
+        `;
+
+        noteList.innerHTML = '';
+
+        if (items.length === 0) {
+          noteList.innerHTML = '<div class="empty-note">条件に一致するメモがありません。</div>';
+          return;
+        }
+
+        items.forEach(note => {
+          const div = document.createElement('div');
+          div.className = 'note-item' + (note.pinned ? ' pinned' : '');
+          const tagBadges = note.tags.map(t => `<span class="badge tag">${escapeHtml(t)}</span>`).join('');
+          div.innerHTML = `
+            <div class="note-item-head">
+              <div>
+                <div class="note-title">${note.pinned ? '<span class="pin-star">📌</span>' : ''}${escapeHtml(note.title)}</div>
+                <div class="note-meta">${formatDatetimeLabel(note.updatedAt)} 更新</div>
+                <div class="note-badges"><span class="badge">${escapeHtml(note.category)}</span>${tagBadges}</div>
+              </div>
+              <div class="note-actions">
+                <button type="button" class="secondary" data-pin="${note.id}">${note.pinned ? 'ピン解除' : 'ピン留め'}</button>
+                <button type="button" class="secondary" data-edit="${note.id}">編集</button>
+                <button type="button" class="danger-btn" data-del="${note.id}">削除</button>
+              </div>
+            </div>
+            <div class="note-body">${escapeHtml(note.body)}</div>
+          `;
+          noteList.appendChild(div);
+        });
+
+        noteList.querySelectorAll('[data-pin]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const note = data.notes.find(n => n.id === btn.dataset.pin);
+            if (!note) return;
+            note.pinned = !note.pinned;
+            note.updatedAt = nowIso();
+            saveData();
+            renderNoteList();
+          });
+        });
+
+        noteList.querySelectorAll('[data-edit]').forEach(btn => {
+          btn.addEventListener('click', () => startEditNote(btn.dataset.edit));
+        });
+
+        noteList.querySelectorAll('[data-del]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (!confirm('このメモを削除しますか？')) return;
+            data.notes = data.notes.filter(n => n.id !== btn.dataset.del);
+            if (editingId === btn.dataset.del) resetNoteForm();
+            saveData();
+            renderNoteList();
+          });
+        });
+      }
+
+      listSearch.addEventListener('input', renderNoteList);
+      listCategoryFilter.addEventListener('change', renderNoteList);
+      listTagFilter.addEventListener('change', renderNoteList);
+      listFilterClearBtn.addEventListener('click', () => {
+        listSearch.value = '';
+        listCategoryFilter.value = 'all';
+        listTagFilter.value = 'all';
+        renderNoteList();
+      });
+
+      // ---------- settings ----------
+      const exportDataBtn = document.getElementById('exportDataBtn');
+      const importDataInput = document.getElementById('importDataInput');
+      const clearDataBtn = document.getElementById('clearDataBtn');
+      const settingsStatus = document.getElementById('settingsStatus');
+      const newCategoryInput = document.getElementById('newCategoryInput');
+      const addCategoryBtn = document.getElementById('addCategoryBtn');
+
+      exportDataBtn.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const d = new Date();
+        a.href = url;
+        a.download = `manabi-memo-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setStatus(settingsStatus, 'エクスポートしました。', 'success');
+      });
+
+      importDataInput.addEventListener('change', () => {
+        const file = importDataInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            if (!confirm('現在のデータに追加でインポートします。よろしいですか？')) return;
+
+            data.notes = data.notes.concat(Array.isArray(parsed.notes) ? parsed.notes : []);
+            if (Array.isArray(parsed.categories)) {
+              parsed.categories.forEach(c => { if (!data.categories.includes(c)) data.categories.push(c); });
+            }
+            if (Array.isArray(parsed.tags)) {
+              parsed.tags.forEach(t => { if (!data.tags.includes(t)) data.tags.push(t); });
+            }
+            saveData();
+            populateCategorySelect(noteCategory, false);
+            populateCategorySelect(listCategoryFilter, true);
+            populateTagFilterSelect();
+            renderNoteList();
+            setStatus(settingsStatus, 'インポートしました。', 'success');
+          } catch (e) {
+            setStatus(settingsStatus, 'ファイルの読み込みに失敗しました。', 'error');
+          }
+          importDataInput.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      clearDataBtn.addEventListener('click', () => {
+        if (!confirm('すべてのメモを削除します。この操作は取り消せません。よろしいですか？')) return;
+        if (!confirm('本当に削除してよろしいですか？')) return;
+        data = { notes: [], categories: [...DEFAULT_CATEGORIES], tags: [...DEFAULT_TAGS] };
+        saveData();
+        resetNoteForm();
+        populateCategorySelect(listCategoryFilter, true);
+        populateTagFilterSelect();
+        renderNoteList();
+        setStatus(settingsStatus, 'すべてのデータを削除しました。', 'success');
+      });
+
+      addCategoryBtn.addEventListener('click', () => {
+        const val = newCategoryInput.value.trim();
+        if (!val) return;
+        if (data.categories.includes(val)) {
+          setStatus(settingsStatus, 'そのカテゴリはすでにあります。', 'error');
+          return;
+        }
+        data.categories.push(val);
+        saveData();
+        newCategoryInput.value = '';
+        populateCategorySelect(noteCategory, false);
+        populateCategorySelect(listCategoryFilter, true);
+        setStatus(settingsStatus, 'カテゴリを追加しました。', 'success');
+      });
+
+      // ---------- init ----------
+      populateCategorySelect(noteCategory, false);
+      populateCategorySelect(listCategoryFilter, true);
+      populateTagFilterSelect();
+      renderTagChips(noteTagChips, data.tags, selectedNoteTags);
+      renderNoteList();
+    });
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js');
+    }
+  </script>
+</body>
+</html>
