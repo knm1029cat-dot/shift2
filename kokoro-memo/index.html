@@ -468,11 +468,6 @@
           </div>
 
           <div class="field">
-            <label for="moodTrigger">出来事・きっかけ（任意）</label>
-            <textarea id="moodTrigger" placeholder="何があったか、思い当たることがあれば"></textarea>
-          </div>
-
-          <div class="field">
             <label for="moodNote">メモ</label>
             <textarea id="moodNote" placeholder="体調や考えたことなど自由に"></textarea>
           </div>
@@ -770,7 +765,6 @@
       const moodAddTagBtn = document.getElementById('moodAddTagBtn');
       const moodSleepHours = document.getElementById('moodSleepHours');
       const moodSleepQuality = document.getElementById('moodSleepQuality');
-      const moodTrigger = document.getElementById('moodTrigger');
       const moodNote = document.getElementById('moodNote');
       const moodStatus = document.getElementById('moodStatus');
       const moodRecentList = document.getElementById('moodRecentList');
@@ -817,7 +811,6 @@
         renderTagChips(moodTagChips, EMOTION_TAGS, selectedMoodTags);
         moodSleepHours.value = '';
         moodSleepQuality.value = '';
-        moodTrigger.value = '';
         moodNote.value = '';
       }
 
@@ -831,7 +824,6 @@
           tags: Array.from(selectedMoodTags),
           sleepHours: moodSleepHours.value ? Number(moodSleepHours.value) : null,
           sleepQuality: moodSleepQuality.value || null,
-          trigger: moodTrigger.value.trim(),
           note: moodNote.value.trim()
         };
 
@@ -869,7 +861,7 @@
                 <button type="button" class="danger-btn" data-del-mood="${entry.id}">削除</button>
               </div>
             </div>
-            <div class="entry-body">${escapeHtml(entry.tags.join('、'))}${entry.trigger ? '\nきっかけ: ' + escapeHtml(entry.trigger) : ''}${entry.note ? '\nメモ: ' + escapeHtml(entry.note) : ''}</div>
+            <div class="entry-body">${escapeHtml(entry.tags.join('、'))}${entry.note ? '\nメモ: ' + escapeHtml(entry.note) : ''}</div>
             ${entry.sleepHours || entry.sleepQuality ? `<div class="entry-meta">睡眠: ${entry.sleepHours ? entry.sleepHours + '時間' : ''} ${entry.sleepQuality || ''}</div>` : ''}
           `;
           moodRecentList.appendChild(div);
@@ -1101,7 +1093,7 @@
                 </div>
                 <div class="entry-actions"><button type="button" class="danger-btn" data-del-mood="${e.id}">削除</button></div>
               </div>
-              <div class="entry-body">${escapeHtml(e.tags.join('、'))}${e.trigger ? '\nきっかけ: ' + escapeHtml(e.trigger) : ''}${e.note ? '\nメモ: ' + escapeHtml(e.note) : ''}</div>
+              <div class="entry-body">${escapeHtml(e.tags.join('、'))}${e.note ? '\nメモ: ' + escapeHtml(e.note) : ''}</div>
             `;
           } else if (item.type === 'thought') {
             const r = item.raw;
@@ -1280,7 +1272,6 @@
           const lines = moods.map(m => `
             <div class="summary-line">
               <strong>${formatDatetimeLabel(m.datetime)}</strong> スコア${m.score}${m.tags.length ? ' [' + escapeHtml(m.tags.join('、')) + ']' : ''}
-              ${m.trigger ? '<br>きっかけ: ' + escapeHtml(m.trigger) : ''}
               ${m.note ? '<br>メモ: ' + escapeHtml(m.note) : ''}
             </div>
           `).join('');
@@ -1333,7 +1324,6 @@
           moods.forEach(m => {
             let l = `${formatDatetimeLabel(m.datetime)} スコア${m.score}`;
             if (m.tags.length) l += ` [${m.tags.join('、')}]`;
-            if (m.trigger) l += ` きっかけ:${m.trigger}`;
             if (m.note) l += ` メモ:${m.note}`;
             lines.push(l);
           });
