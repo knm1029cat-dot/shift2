@@ -494,7 +494,7 @@
     <section class="tab" data-tab="thought">
       <div class="card">
         <h2>考えたことをメモする</h2>
-        <p class="section-desc">気になったことがあったときに、状況や思ったこと・気分を書き出しておくメモです。あとから見返して「他にも考え方があるかも」と思えたら、それも書き足してみてください。</p>
+        <p class="section-desc">気になったことがあったときに、状況や思ったこと・気分をそのまま書き出しておくメモです。うまくまとめようとしなくて大丈夫です。</p>
 
         <form id="thoughtForm">
           <div class="field">
@@ -520,19 +520,6 @@
             <div class="field">
               <label for="thoughtIntensityBefore">気分の強さ: <span id="thoughtIntensityBeforeLabel">50</span>%</label>
               <input type="range" id="thoughtIntensityBefore" min="0" max="100" value="50" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="thoughtAlternative">別の見方（あれば・任意）</label>
-            <textarea id="thoughtAlternative" placeholder="今はこう思うけど、こういう見方もできるかも…など"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="thoughtIntensityAfter">今の気分の強さ（任意）: <span id="thoughtIntensityAfterLabel">未入力</span></label>
-            <input type="range" id="thoughtIntensityAfter" min="0" max="100" value="50" />
-            <div class="btn-row" style="margin-top:6px;">
-              <button type="button" class="ghost" id="thoughtAfterClearBtn">未入力に戻す</button>
             </div>
           </div>
 
@@ -906,14 +893,8 @@
       const thoughtEmotion = document.getElementById('thoughtEmotion');
       const thoughtIntensityBefore = document.getElementById('thoughtIntensityBefore');
       const thoughtIntensityBeforeLabel = document.getElementById('thoughtIntensityBeforeLabel');
-      const thoughtAlternative = document.getElementById('thoughtAlternative');
-      const thoughtIntensityAfter = document.getElementById('thoughtIntensityAfter');
-      const thoughtIntensityAfterLabel = document.getElementById('thoughtIntensityAfterLabel');
-      const thoughtAfterClearBtn = document.getElementById('thoughtAfterClearBtn');
       const thoughtStatus = document.getElementById('thoughtStatus');
       const thoughtRecentList = document.getElementById('thoughtRecentList');
-
-      let thoughtAfterSet = false;
 
       function populateThoughtEmotionSelect() {
         const current = thoughtEmotion.value;
@@ -931,17 +912,6 @@
         thoughtIntensityBeforeLabel.textContent = thoughtIntensityBefore.value;
       });
 
-      thoughtIntensityAfter.addEventListener('input', () => {
-        thoughtAfterSet = true;
-        thoughtIntensityAfterLabel.textContent = thoughtIntensityAfter.value + '%';
-      });
-
-      thoughtAfterClearBtn.addEventListener('click', () => {
-        thoughtAfterSet = false;
-        thoughtIntensityAfter.value = 50;
-        thoughtIntensityAfterLabel.textContent = '未入力';
-      });
-
       function resetThoughtForm() {
         thoughtDatetime.value = toDatetimeLocalValue(new Date());
         thoughtSituation.value = '';
@@ -949,10 +919,6 @@
         populateThoughtEmotionSelect();
         thoughtIntensityBefore.value = 50;
         thoughtIntensityBeforeLabel.textContent = '50';
-        thoughtAlternative.value = '';
-        thoughtIntensityAfter.value = 50;
-        thoughtAfterSet = false;
-        thoughtIntensityAfterLabel.textContent = '未入力';
       }
 
       thoughtForm.addEventListener('submit', (e) => {
@@ -964,9 +930,7 @@
           situation: thoughtSituation.value.trim(),
           automaticThought: thoughtAutomatic.value.trim(),
           emotion: thoughtEmotion.value,
-          intensityBefore: Number(thoughtIntensityBefore.value),
-          alternativeThought: thoughtAlternative.value.trim(),
-          intensityAfter: thoughtAfterSet ? Number(thoughtIntensityAfter.value) : null
+          intensityBefore: Number(thoughtIntensityBefore.value)
         };
 
         if (!record.datetime || !record.situation || !record.automaticThought) {
@@ -996,14 +960,14 @@
           div.innerHTML = `
             <div class="entry-item-head">
               <div>
-                <span class="entry-badge thought">${escapeHtml(r.emotion)} ${r.intensityBefore}%${r.intensityAfter !== null ? ' → ' + r.intensityAfter + '%' : ''}</span>
+                <span class="entry-badge thought">${escapeHtml(r.emotion)} ${r.intensityBefore}%</span>
                 <span class="entry-date">${formatDatetimeLabel(r.datetime)}</span>
               </div>
               <div class="entry-actions">
                 <button type="button" class="danger-btn" data-del-thought="${r.id}">削除</button>
               </div>
             </div>
-            <div class="entry-body">状況: ${escapeHtml(r.situation)}\n思ったこと: ${escapeHtml(r.automaticThought)}${r.alternativeThought ? '\n別の見方: ' + escapeHtml(r.alternativeThought) : ''}</div>
+            <div class="entry-body">状況: ${escapeHtml(r.situation)}\n思ったこと: ${escapeHtml(r.automaticThought)}</div>
           `;
           thoughtRecentList.appendChild(div);
         });
@@ -1144,12 +1108,12 @@
             div.innerHTML = `
               <div class="entry-item-head">
                 <div>
-                  <span class="entry-badge thought">${escapeHtml(r.emotion)} ${r.intensityBefore}%${r.intensityAfter !== null ? ' → ' + r.intensityAfter + '%' : ''}</span>
+                  <span class="entry-badge thought">${escapeHtml(r.emotion)} ${r.intensityBefore}%</span>
                   <span class="entry-date">${formatDatetimeLabel(r.datetime)}</span>
                 </div>
                 <div class="entry-actions"><button type="button" class="danger-btn" data-del-thought="${r.id}">削除</button></div>
               </div>
-              <div class="entry-body">状況: ${escapeHtml(r.situation)}\n思ったこと: ${escapeHtml(r.automaticThought)}${r.alternativeThought ? '\n別の見方: ' + escapeHtml(r.alternativeThought) : ''}</div>
+              <div class="entry-body">状況: ${escapeHtml(r.situation)}\n思ったこと: ${escapeHtml(r.automaticThought)}</div>
             `;
           } else {
             const e = item.raw;
@@ -1329,10 +1293,9 @@
         } else {
           const lines = thoughts.map(t => `
             <div class="summary-line">
-              <strong>${formatDatetimeLabel(t.datetime)}</strong> 気分: ${escapeHtml(t.emotion)} ${t.intensityBefore}%${t.intensityAfter !== null ? ' → ' + t.intensityAfter + '%' : ''}<br>
+              <strong>${formatDatetimeLabel(t.datetime)}</strong> 気分: ${escapeHtml(t.emotion)} ${t.intensityBefore}%<br>
               状況: ${escapeHtml(t.situation)}<br>
               思ったこと: ${escapeHtml(t.automaticThought)}
-              ${t.alternativeThought ? '<br>別の見方: ' + escapeHtml(t.alternativeThought) : ''}
             </div>
           `).join('');
           summaryThoughtBlock.innerHTML = `<h3>考えたことのメモ</h3>${lines}`;
@@ -1385,8 +1348,7 @@
             lines.push(`${formatDatetimeLabel(t.datetime)}`);
             lines.push(` 状況: ${t.situation}`);
             lines.push(` 思ったこと: ${t.automaticThought}`);
-            lines.push(` 気分: ${t.emotion} ${t.intensityBefore}%${t.intensityAfter !== null ? ' → ' + t.intensityAfter + '%' : ''}`);
-            if (t.alternativeThought) lines.push(` 別の見方: ${t.alternativeThought}`);
+            lines.push(` 気分: ${t.emotion} ${t.intensityBefore}%`);
           });
         }
         lines.push('');
