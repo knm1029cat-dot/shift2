@@ -493,8 +493,8 @@
     <!-- 思考整理 -->
     <section class="tab" data-tab="thought">
       <div class="card">
-        <h2>考えを整理する</h2>
-        <p class="section-desc">つらい気持ちになったときの状況・考え・気分を書き出し、別の見方も考えてみることで、思考のクセに気づく助けになります（認知行動療法の考え方を参考にしています）。</p>
+        <h2>考えたことをメモする</h2>
+        <p class="section-desc">気になったことがあったときに、状況や思ったこと・気分を書き出しておくメモです。あとから見返して「他にも考え方があるかも」と思えたら、それも書き足してみてください。</p>
 
         <form id="thoughtForm">
           <div class="field">
@@ -508,7 +508,7 @@
           </div>
 
           <div class="field">
-            <label for="thoughtAutomatic">そのとき浮かんだ考え（自動思考）</label>
+            <label for="thoughtAutomatic">そのとき思ったこと</label>
             <textarea id="thoughtAutomatic" placeholder="頭に浮かんだ考えや言葉" required></textarea>
           </div>
 
@@ -524,18 +524,8 @@
           </div>
 
           <div class="field">
-            <label for="thoughtEvidenceFor">その考えを裏付ける事実</label>
-            <textarea id="thoughtEvidenceFor" placeholder="その考えが正しいと思える根拠"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="thoughtEvidenceAgainst">その考えに反する事実</label>
-            <textarea id="thoughtEvidenceAgainst" placeholder="その考えとは違う事実や視点"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="thoughtAlternative">別の見方・バランスの取れた考え</label>
-            <textarea id="thoughtAlternative" placeholder="もう少し楽になれる考え方があるとすれば"></textarea>
+            <label for="thoughtAlternative">別の見方（あれば・任意）</label>
+            <textarea id="thoughtAlternative" placeholder="今はこう思うけど、こういう見方もできるかも…など"></textarea>
           </div>
 
           <div class="field">
@@ -916,8 +906,6 @@
       const thoughtEmotion = document.getElementById('thoughtEmotion');
       const thoughtIntensityBefore = document.getElementById('thoughtIntensityBefore');
       const thoughtIntensityBeforeLabel = document.getElementById('thoughtIntensityBeforeLabel');
-      const thoughtEvidenceFor = document.getElementById('thoughtEvidenceFor');
-      const thoughtEvidenceAgainst = document.getElementById('thoughtEvidenceAgainst');
       const thoughtAlternative = document.getElementById('thoughtAlternative');
       const thoughtIntensityAfter = document.getElementById('thoughtIntensityAfter');
       const thoughtIntensityAfterLabel = document.getElementById('thoughtIntensityAfterLabel');
@@ -961,8 +949,6 @@
         populateThoughtEmotionSelect();
         thoughtIntensityBefore.value = 50;
         thoughtIntensityBeforeLabel.textContent = '50';
-        thoughtEvidenceFor.value = '';
-        thoughtEvidenceAgainst.value = '';
         thoughtAlternative.value = '';
         thoughtIntensityAfter.value = 50;
         thoughtAfterSet = false;
@@ -979,14 +965,12 @@
           automaticThought: thoughtAutomatic.value.trim(),
           emotion: thoughtEmotion.value,
           intensityBefore: Number(thoughtIntensityBefore.value),
-          evidenceFor: thoughtEvidenceFor.value.trim(),
-          evidenceAgainst: thoughtEvidenceAgainst.value.trim(),
           alternativeThought: thoughtAlternative.value.trim(),
           intensityAfter: thoughtAfterSet ? Number(thoughtIntensityAfter.value) : null
         };
 
         if (!record.datetime || !record.situation || !record.automaticThought) {
-          setStatus(thoughtStatus, '日時・状況・自動思考は必須です。', 'error');
+          setStatus(thoughtStatus, '日時・状況・思ったことは必須です。', 'error');
           return;
         }
 
@@ -994,7 +978,7 @@
         saveData();
         resetThoughtForm();
         renderThoughtRecentList();
-        setStatus(thoughtStatus, '思考整理の記録を保存しました。', 'success');
+        setStatus(thoughtStatus, 'メモを保存しました。', 'success');
       });
 
       function renderThoughtRecentList() {
@@ -1019,7 +1003,7 @@
                 <button type="button" class="danger-btn" data-del-thought="${r.id}">削除</button>
               </div>
             </div>
-            <div class="entry-body">状況: ${escapeHtml(r.situation)}\n自動思考: ${escapeHtml(r.automaticThought)}${r.alternativeThought ? '\n別の見方: ' + escapeHtml(r.alternativeThought) : ''}</div>
+            <div class="entry-body">状況: ${escapeHtml(r.situation)}\n思ったこと: ${escapeHtml(r.automaticThought)}${r.alternativeThought ? '\n別の見方: ' + escapeHtml(r.alternativeThought) : ''}</div>
           `;
           thoughtRecentList.appendChild(div);
         });
@@ -1165,7 +1149,7 @@
                 </div>
                 <div class="entry-actions"><button type="button" class="danger-btn" data-del-thought="${r.id}">削除</button></div>
               </div>
-              <div class="entry-body">状況: ${escapeHtml(r.situation)}\n自動思考: ${escapeHtml(r.automaticThought)}${r.evidenceFor ? '\n裏付ける事実: ' + escapeHtml(r.evidenceFor) : ''}${r.evidenceAgainst ? '\n反する事実: ' + escapeHtml(r.evidenceAgainst) : ''}${r.alternativeThought ? '\n別の見方: ' + escapeHtml(r.alternativeThought) : ''}</div>
+              <div class="entry-body">状況: ${escapeHtml(r.situation)}\n思ったこと: ${escapeHtml(r.automaticThought)}${r.alternativeThought ? '\n別の見方: ' + escapeHtml(r.alternativeThought) : ''}</div>
             `;
           } else {
             const e = item.raw;
@@ -1341,17 +1325,17 @@
 
         // thought block
         if (thoughts.length === 0) {
-          summaryThoughtBlock.innerHTML = '<h3>思考整理の記録</h3><div class="empty-note">この期間の記録はありません。</div>';
+          summaryThoughtBlock.innerHTML = '<h3>考えたことのメモ</h3><div class="empty-note">この期間の記録はありません。</div>';
         } else {
           const lines = thoughts.map(t => `
             <div class="summary-line">
               <strong>${formatDatetimeLabel(t.datetime)}</strong> 気分: ${escapeHtml(t.emotion)} ${t.intensityBefore}%${t.intensityAfter !== null ? ' → ' + t.intensityAfter + '%' : ''}<br>
               状況: ${escapeHtml(t.situation)}<br>
-              自動思考: ${escapeHtml(t.automaticThought)}
+              思ったこと: ${escapeHtml(t.automaticThought)}
               ${t.alternativeThought ? '<br>別の見方: ' + escapeHtml(t.alternativeThought) : ''}
             </div>
           `).join('');
-          summaryThoughtBlock.innerHTML = `<h3>思考整理の記録</h3>${lines}`;
+          summaryThoughtBlock.innerHTML = `<h3>考えたことのメモ</h3>${lines}`;
         }
 
         // diary block
@@ -1393,17 +1377,15 @@
         }
         lines.push('');
 
-        lines.push('■ 思考整理の記録');
+        lines.push('■ 考えたことのメモ');
         if (thoughts.length === 0) {
           lines.push('記録なし');
         } else {
           thoughts.forEach(t => {
             lines.push(`${formatDatetimeLabel(t.datetime)}`);
             lines.push(` 状況: ${t.situation}`);
-            lines.push(` 自動思考: ${t.automaticThought}`);
+            lines.push(` 思ったこと: ${t.automaticThought}`);
             lines.push(` 気分: ${t.emotion} ${t.intensityBefore}%${t.intensityAfter !== null ? ' → ' + t.intensityAfter + '%' : ''}`);
-            if (t.evidenceFor) lines.push(` 裏付ける事実: ${t.evidenceFor}`);
-            if (t.evidenceAgainst) lines.push(` 反する事実: ${t.evidenceAgainst}`);
             if (t.alternativeThought) lines.push(` 別の見方: ${t.alternativeThought}`);
           });
         }
